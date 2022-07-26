@@ -1,0 +1,279 @@
+<html>
+  <head>
+    <title>Image Compare</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
+  </head>
+  <body>
+    <div class="img-upload">
+      <form runat="server">
+        <h3> Compare Images: </h3>
+        <input type='file' id="file-input" class="custom-file-input" />
+        <input type='file' id="file-input2" class="custom-file-input custom-file-input2" />
+      </form>
+      <div class="opt-val"></div>
+    </div>
+    <div class="rinse-away-container">
+      <div class="container rinse-away-content">
+        <div class="compare-image-container">
+          <div class="ba-slider">
+            <img id="img1"/>
+            <div class="label-left"></div>
+            <div class="resize">
+              <img id="img2"/>
+            </div>
+            <div class="label-right"></div>
+            <span class="handle"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <style>
+      body {
+      font-family: 'Poppins', sans-serif;
+      width: 890px;
+      margin: auto;
+      }
+      .rinse-away-container {
+      margin-bottom: 8rem;
+      opacity: 0;
+      }
+      .ba-slider {
+      position: relative;
+      max-width: 720px;
+      margin-top: 50px;
+      }
+      .ba-slider img {
+      width: 100%;
+      display: block;
+      }
+      .ba-slider .label-left,
+      .ba-slider .label-right {
+      position: absolute;
+      top: -30px;
+      z-index: 2;
+      padding: 5px 12px;
+      color: #fff;
+      background: #25221a;
+      font-size: 15px;
+      }
+      .ba-slider .label-right {
+      right: 0;
+      }
+      .resize {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 50%;
+      overflow: hidden;
+      }
+      .handle {
+      position: absolute;
+      left: 50%;
+      top: 0;
+      bottom: 0;
+      width: 5px;
+      margin-left: -2px;
+      background-color: #25221a;
+      box-shadow: 0 0 20px 0 #fff;
+      cursor: ew-resize;
+      }
+      .handle:after {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 30px;
+      height: 30px;
+      margin: -32px 0 0 -18px;
+      content: '';
+      color: white;
+      text-align: center;
+      background: #25221a;
+      border: 3px solid;
+      border-radius: 50%;
+      -webkit-transition: all 0.3s ease;
+      transition: all 0.3s ease;
+      }
+      .draggable:after {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      margin: -32px 0 0 -20px;
+      }
+      .img-upload {
+      margin-top:  25px;
+      position: relative;
+      }
+      .opt-val {
+      display: inline-block;
+      position: absolute;
+      top: 55px;
+      right: 170px;
+      font-size: 20px;
+      }
+      .custom-file-input::-webkit-file-upload-button {
+      visibility: hidden;
+      }
+      .custom-file-input {
+      display: inline-block;
+      max-width: 175px;
+      font-size: 16px;
+      cursor: pointer;
+      }
+      .custom-file-input::before {
+      content: 'Select Original';
+      display: inline-block;
+      background: linear-gradient(top, #f9f9f9, #e3e3e3);
+      border: 1px solid #999;
+      padding: 05px 12px;
+      font-family: 'Poppins', sans-serif;
+      }
+      .custom-file-input2::before {
+      margin-top: 08px;
+      content: 'Select Optimized';
+      display: inline-block;
+      background: linear-gradient(top, #f9f9f9, #e3e3e3);
+      border: 1px solid #999;
+      padding: 05px 12px;
+      font-family: 'Poppins', sans-serif;
+      }
+      .custom-file-input:hover::before {
+      border-color: black;
+      }
+      .custom-file-input:active::before {
+      background: -webkit-linear-gradient(top, #e3e3e3, #f9f9f9);
+      }
+    </style>
+    <script>
+      $(document).ready(function () {
+        let imgOne = 0;
+        let imgTwo = 0;
+          $('.ba-slider').each(function () {
+              var cur = $(this);
+              // Adjust the slider
+              var width = cur.width() + 'px';
+              cur.find('.resize img').css('width', width);
+              // Bind dragging events
+              drags(cur.find('.handle'), cur.find('.resize'), cur);
+          });
+      });
+      
+      // Update sliders on resize. 
+      $(window).resize(function () {
+          $('.ba-slider').each(function () {
+              var cur = $(this);
+              var width = cur.width() + 'px';
+              cur.find('.resize img').css('width', width);
+          });
+      });
+      
+      function drags(dragElement, resizeElement, container) {
+      
+          // Initialize the dragging event on mousedown.
+          dragElement.on('mousedown touchstart', function (e) {
+      
+              dragElement.addClass('draggable');
+              resizeElement.addClass('resizable');
+      
+              // Check if it's a mouse or touch event and pass along the correct value
+              var startX = (e.pageX) ? e.pageX : e.originalEvent.touches[0].pageX;
+      
+              // Get the initial position
+              var dragWidth = dragElement.outerWidth(),
+                  posX = dragElement.offset().left + dragWidth - startX,
+                  containerOffset = container.offset().left,
+                  containerWidth = container.outerWidth();
+      
+              // Set limits
+              minLeft = containerOffset + 10;
+              maxLeft = containerOffset + containerWidth - dragWidth - 10;
+      
+              // Calculate the dragging distance on mousemove.
+              dragElement.parents().on("mousemove touchmove", function (e) {
+      
+                  // Check if it's a mouse or touch event and pass along the correct value
+                  var moveX = (e.pageX) ? e.pageX : e.originalEvent.touches[0].pageX;
+      
+                  leftValue = moveX + posX - dragWidth;
+      
+                  // Prevent going off limits
+                  if (leftValue < minLeft) {
+                      leftValue = minLeft;
+                  } else if (leftValue > maxLeft) {
+                      leftValue = maxLeft;
+                  }
+      
+                  // Translate the handle's left value to masked divs width.
+                  widthValue = (leftValue + dragWidth / 2 - containerOffset) * 100 / containerWidth + '%';
+      
+                  // Set the new values for the slider and the handle. 
+                  // Bind mouseup events to stop dragging.
+                  $('.draggable').css('left', widthValue).on('mouseup touchend touchcancel', function () {
+                      $(this).removeClass('draggable');
+                      resizeElement.removeClass('resizable');
+                  });
+                  $('.resizable').css('width', widthValue);
+              }).on('mouseup touchend touchcancel', function () {
+                  dragElement.removeClass('draggable');
+                  resizeElement.removeClass('resizable');
+              });
+              e.preventDefault();
+          }).on('mouseup touchend touchcancel', function (e) {
+              dragElement.removeClass('draggable');
+              resizeElement.removeClass('resizable');
+          });
+      }
+      function readURL(input) {
+        if (input.files && input.files[0]) {
+          var reader = new FileReader();
+          reader.onload = function(e) {
+            $("#img1").attr('src', e.target.result);
+            $('#iimg1').hide();
+            $('#img1').fadeIn(650);
+            console.log(e.target.result);
+          }
+          $('.label-left').text(Math.round((input.files[0].size / 1024) * 100) / 100 + " kb");
+          $('.rinse-away-container').css('opacity', '1');
+          imgOne = Math.round((input.files[0].size / 1024) * 100) / 100;
+          reader.readAsDataURL(input.files[0]);
+        }
+      }
+      
+      $("#file-input").change(function() {
+        readURL(this);
+      });
+      
+      function readURL2(input) {
+        if (input.files && input.files[0]) {
+          var reader = new FileReader();
+          reader.onload = function(e) {
+            $("#img2").attr('src', e.target.result);
+            $('#iimg2').hide();
+            $('#img2').fadeIn(650);
+            console.log(e.target.result);
+          }
+          $('.label-right').text(Math.round((input.files[0].size / 1024) * 100) / 100 + " kb");
+          imgTwo = Math.round((input.files[0].size / 1024) * 100) / 100;
+          reader.readAsDataURL(input.files[0]);
+        }
+      }
+      
+      $("#file-input2").change(function() {
+        readURL2(this);
+        if(imgTwo > imgOne){
+          var percDiff =  (imgTwo-imgOne)/imgTwo*100.0;
+        } else {
+          var percDiff =  (imgOne-imgTwo)/imgOne*100.0;
+        }
+        
+        var diff = Math.round(percDiff * 100) / 100;
+        $('.opt-val').html(diff+' % image compression');
+      });
+      
+      
+    </script>
+  </body>
+</html>
